@@ -2,21 +2,38 @@ package cmd
 
 import (
 	"flag"
+	"fmt"
+	"io"
+)
+
+const (
+	PERSISTFILENAME = "quotes"
 )
 
 type AddConfig struct {
-	persist bool
-	genre   string
+	genre string
 }
 
 // func HandleAdd(w io.Writer, args []string) error {
-
+// 	fs := flag.NewFlagSet("add", flag.ContinueOnError)
 // }
 
-func parseAddArgs(fs *flag.FlagSet, args []string) (AddConfig, error) {
+func parseAddArgs(w io.Writer, args []string) (AddConfig, error) {
 	var config AddConfig
-	fs.BoolVar(&config.persist, "p", false, "persist quote")
+
+	fs := flag.NewFlagSet("add", flag.ContinueOnError)
 	fs.StringVar(&config.genre, "g", "misc", "genre to which the quote belongs")
+
+	fs.SetOutput(w)
+	fs.Usage = func() {
+		usageString := `
+add: add quotes
+		
+usage: add`
+		fmt.Fprint(w, usageString)
+		fmt.Fprintln(w)
+		fs.PrintDefaults()
+	}
 
 	err := fs.Parse(args)
 	if err != nil {
