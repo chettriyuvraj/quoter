@@ -8,6 +8,10 @@ import (
 
 const (
 	PERSISTFILENAME = "quotes"
+	USAGE_STRING    = `
+add: add quotes
+			
+usage: add`
 )
 
 type AddConfig struct {
@@ -15,7 +19,7 @@ type AddConfig struct {
 }
 
 // func HandleAdd(w io.Writer, args []string) error {
-// 	fs := flag.NewFlagSet("add", flag.ContinueOnError)
+// 	config :=
 // }
 
 func parseAddArgs(w io.Writer, args []string) (AddConfig, error) {
@@ -26,11 +30,7 @@ func parseAddArgs(w io.Writer, args []string) (AddConfig, error) {
 
 	fs.SetOutput(w)
 	fs.Usage = func() {
-		usageString := `
-add: add quotes
-		
-usage: add`
-		fmt.Fprint(w, usageString)
+		fmt.Fprint(w, USAGE_STRING)
 		fmt.Fprintln(w)
 		fs.PrintDefaults()
 	}

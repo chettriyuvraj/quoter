@@ -42,12 +42,8 @@ import (
 // 	}
 // }
 
-/*
-- Not testing unknown flags error as it is equivalent to testing flag standard library
-- TODO: Should I?
-- TODO: Test should point out exact test which is failing
-*/
 func TestParseAddArgs(t *testing.T) {
+
 	tcs := []struct {
 		desc   string
 		args   []string
@@ -56,18 +52,16 @@ func TestParseAddArgs(t *testing.T) {
 		output string
 	}{
 		{
-			desc: "help flag",
-			args: []string{"-h"},
-			err:  flag.ErrHelp,
-			output: `
-add: add quotes
-			
-usage: add
-
-Options: 
-  -g string
-    	genre to which the quote belongs
-`,
+			desc:   "help flag",
+			args:   []string{"-h"},
+			err:    flag.ErrHelp,
+			output: USAGE_STRING,
+		},
+		{
+			desc:   "non existent flag",
+			args:   []string{"-x"},
+			err:    flag.ErrHelp,
+			output: USAGE_STRING,
 		},
 		{
 			desc: "genre flag only",
