@@ -33,6 +33,7 @@ func HandleAdd(w io.Writer, args []string) error {
 	if err != nil {
 		return err
 	}
+	defer f.Close()
 
 	err = runAddCmd(w, f, config)
 	if err != nil {
