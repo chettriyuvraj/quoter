@@ -10,7 +10,7 @@ type Quote struct {
 	Genre string `json:"genre"`
 }
 
-/* TODO: Have we added too much complexity for testing one simple thing? */
+/* TODO: Have we added too much complexity for testing one simple thing? Is there something pre-existing that makes this easier? */
 
 /* Utility to mimic a readwriteseeker in-place of an actual file */
 type ReadWriteSeekerUtil struct {
