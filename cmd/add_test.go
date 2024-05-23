@@ -119,13 +119,13 @@ func TestParseAddArgs(t *testing.T) {
 			desc:   "help flag",
 			args:   []string{"-h"},
 			err:    flag.ErrHelp,
-			output: USAGE_STRING,
+			output: ADD_USAGE_STRING,
 		},
 		{
 			desc:   "non existent flag",
 			args:   []string{"-x"},
 			err:    flag.ErrHelp,
-			output: USAGE_STRING,
+			output: ADD_USAGE_STRING,
 		},
 		{
 			desc: "genre flag only",
@@ -136,7 +136,7 @@ func TestParseAddArgs(t *testing.T) {
 			desc:   "genre flag but no genre specifed",
 			args:   []string{"-g"},
 			err:    flag.ErrHelp,
-			output: USAGE_STRING,
+			output: ADD_USAGE_STRING,
 		},
 		{
 			desc: "no flags",

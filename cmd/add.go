@@ -10,12 +10,13 @@ import (
 
 const (
 	PERSIST_FILENAME = "quotes"
-	USAGE_STRING     = `
+	ADD_USAGE_STRING = `
 add: add quotes
 			
-usage: add`
+usage: add` /* TODO: Write proper usage */
 )
 
+/* TODO: Do you want the quote to be a part of the config itself here? If not, might require a redesign */
 type AddConfig struct {
 	genre string
 	quote string
@@ -83,7 +84,7 @@ func parseAddArgs(w io.Writer, args []string) (AddConfig, error) {
 
 	fs.SetOutput(w)
 	fs.Usage = func() {
-		fmt.Fprint(w, USAGE_STRING)
+		fmt.Fprint(w, ADD_USAGE_STRING)
 		fmt.Fprintln(w)
 		fs.PrintDefaults()
 	}
