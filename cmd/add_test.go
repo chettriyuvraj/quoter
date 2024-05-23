@@ -11,9 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestRunAddSingleQuote(t *testing.T) {
-	defer os.Remove(PERSIST_FILENAME)
-
+func TestRunAddCmdSingleQuote(t *testing.T) {
 	tcs := []struct {
 		desc   string
 		config AddConfig
@@ -31,18 +29,20 @@ func TestRunAddSingleQuote(t *testing.T) {
 
 	for _, tc := range tcs {
 		buf := bytes.Buffer{}
-		err := runAddCmd(&buf, tc.config)
+		quoteStorage := ReadWriteSeekerUtil{ReadSeeker: bytes.NewReader([]byte{})}
+		err := runAddCmd(&buf, &quoteStorage, tc.config)
 		if tc.err != nil {
 			require.Error(t, err, tc.err, tc.desc)
 			continue
 		}
 		require.NoError(t, err, tc.desc)
-		testQuotesFile(t, tc.want, tc.desc)
+		testQuoteStorage(t, tc.want, &quoteStorage, tc.desc)
 	}
 
 }
 
-func TestRunAddMultiQuote(t *testing.T) {
+/* Tests addition of multiple quotes sequentially, and subsequent JSON file formation*/
+func TestRunAddCmdMultiQuote(t *testing.T) {
 	defer os.Remove(PERSIST_FILENAME)
 
 	tcs := []struct {
@@ -68,22 +68,26 @@ func TestRunAddMultiQuote(t *testing.T) {
 	}
 
 	want := []Quote{}
+	quoteStorage := ReadWriteSeekerUtil{ReadSeeker: bytes.NewReader([]byte{})}
 	for _, tc := range tcs {
 		buf := bytes.Buffer{}
-		err := runAddCmd(&buf, tc.config)
+		err := runAddCmd(&buf, &quoteStorage, tc.config)
 		require.NoError(t, err, tc.desc)
 		want = append(want, tc.want...)
 	}
-	testQuotesFile(t, want, "test multiple adds")
+	testQuoteStorage(t, want, &quoteStorage, "test multiple adds")
 
 }
 
-func testQuotesFile(t *testing.T, want []Quote, desc string) {
+func testQuoteStorage(t *testing.T, want []Quote, quoteStorage io.ReadSeeker, desc string) {
 	t.Helper()
 	var got []Quote
-	f, err := os.Open(PERSIST_FILENAME)
-	require.NoError(t, err, desc)
-	data, err := io.ReadAll(f)
+	/* Quote storages seek pointer may have been moved around, but now we want its entire contents */
+	_, err := quoteStorage.Seek(0, 0)
+	if err != nil {
+		require.NoError(t, err, desc)
+	}
+	data, err := io.ReadAll(quoteStorage)
 	require.NoError(t, err, desc)
 	err = json.Unmarshal(data, &got)
 	require.NoError(t, err, desc)

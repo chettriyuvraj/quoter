@@ -28,7 +28,13 @@ func HandleAdd(w io.Writer, args []string) error {
 		return err
 	}
 
-	err = runAddCmd(w, config)
+	/* Read current quotes file, or create one if it doesn't exist */
+	f, err := os.OpenFile(PERSIST_FILENAME, os.O_RDWR|os.O_CREATE, 0777)
+	if err != nil {
+		return err
+	}
+
+	err = runAddCmd(w, f, config)
 	if err != nil {
 		return err
 	}
@@ -36,14 +42,15 @@ func HandleAdd(w io.Writer, args []string) error {
 	return nil
 }
 
-func runAddCmd(w io.Writer, config AddConfig) error {
-	/* Read current quotes file, or create one if it doesn't exist */
-	f, err := os.OpenFile(PERSIST_FILENAME, os.O_RDWR|os.O_CREATE, 0777)
+func runAddCmd(w io.Writer, quoteStorage io.ReadWriteSeeker, config AddConfig) error {
+
+	/* Read entire contents of quoteStorage */
+	_, err := quoteStorage.Seek(0, 0)
 	if err != nil {
 		return err
 	}
 
-	data, err := io.ReadAll(f)
+	data, err := io.ReadAll(quoteStorage)
 	if err != nil {
 		return err
 	}
@@ -63,11 +70,11 @@ func runAddCmd(w io.Writer, config AddConfig) error {
 	if err != nil {
 		return err
 	}
-	_, err = f.Seek(0, 0)
+	_, err = quoteStorage.Seek(0, 0)
 	if err != nil {
 		return err
 	}
-	_, err = f.Write(writeData)
+	_, err = quoteStorage.Write(writeData)
 	if err != nil {
 		return err
 	}
