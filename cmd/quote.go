@@ -71,6 +71,8 @@ func runQuoteCmd(w io.Writer, quoteStorage io.ReadWriteSeeker, config QuoteConfi
 		randIdx := rand.Intn(len(quotes))
 		randQuote := quotes[randIdx]
 		fmt.Fprint(w, randQuote.Text)
+		fmt.Fprintln(w)
+		return nil
 	}
 
 	/* If genre specified, find genre specific quotes */
@@ -86,6 +88,7 @@ func runQuoteCmd(w io.Writer, quoteStorage io.ReadWriteSeeker, config QuoteConfi
 	randIdx := rand.Intn(len(genreSpecificQuotes))
 	randQuote := genreSpecificQuotes[randIdx]
 	fmt.Fprint(w, randQuote.Text)
+	fmt.Fprintln(w)
 
 	return nil
 }
