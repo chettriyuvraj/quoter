@@ -2,10 +2,13 @@ package cmd
 
 import (
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
+	"io/fs"
 	"math/rand"
+	"os"
 )
 
 type QuoteConfig struct {
@@ -19,16 +22,30 @@ quote: returns a quote from stored list
 usage: quote` /* TODO: Add proper usage */
 )
 
-// func HandleQuote(w io.Writer, args [] string) error {
-// 	/* Open file */
-// 	f, err := os.Open(PERSIST_FILENAME)
-// 	if err != nil {
-// 		if errors.Is(err, fs.ErrNotExist) {
-// 			return ErrNoQuotesFound
-// 		}
-// 		return err
-// 	}
-// }
+func HandleQuote(w io.Writer, args []string) error {
+	/* Parse flags */
+	config, err := parseQuoteArgs(w, args)
+	if err != nil {
+		return err
+	}
+
+	/* Open current quote file */
+	f, err := os.Open(PERSIST_FILENAME)
+	if err != nil {
+		if errors.Is(err, fs.ErrNotExist) {
+			return ErrNoQuotesFound
+		}
+		return err
+	}
+
+	/* Run command */
+	err = runQuoteCmd(w, f, config)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
 
 func runQuoteCmd(w io.Writer, quoteStorage io.ReadWriteSeeker, config QuoteConfig) error {
 	var quotes []Quote
