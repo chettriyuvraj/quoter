@@ -3,6 +3,7 @@ package cmd
 import (
 	"bytes"
 	"flag"
+	"io"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -59,4 +60,56 @@ func TestParseQuoteArgs(t *testing.T) {
 		require.Equal(t, tc.output, buf.String(), tc.desc)
 
 	}
+}
+
+func addQuotes(t *testing.T, quoteStorage io.ReadWriteSeeker) {
+	t.Helper()
+
+	outputBuf := bytes.NewBuffer([]byte{})
+
+	quoteConfigs := []AddConfig{
+		{genre: "misc", quote: "Phool hu gulab ka, chameli ka mat samajhna..Aashiq hu aapka apni saheli ka mat samajhna!"},
+		{genre: "romance", quote: "Humse door jaoge kaise? Humko tum bhulaoge kaise? Hum vo khushbu hai jo saanson me baste hai, apni saanson ko rok paoge kaise?"},
+	}
+	for _, config := range quoteConfigs {
+		err := runAddCmd(outputBuf, quoteStorage, config)
+		require.NoError(t, err)
+	}
+
+}
+
+func TestRunQuoteCmd(t *testing.T) {
+	/* Add quotes to a storage first */
+	quoteStorage := ReadWriteSeekerUtil{ReadSeeker: bytes.NewReader([]byte{})}
+	addQuotes(t, &quoteStorage)
+
+	tcs := []struct {
+		desc   string
+		config QuoteConfig
+		err    error
+		want   string
+	}{
+		{
+			desc:   "quote of romance genre",
+			config: QuoteConfig{Genre: "romance"},
+			want:   "Humse door jaoge kaise? Humko tum bhulaoge kaise? Hum vo khushbu hai jo saanson me baste hai, apni saanson ko rok paoge kaise?",
+		},
+		// { TODO: How to test random quote?
+		// 	desc:   "quote with no genre specified",
+		// 	config: QuoteConfig{Genre: "romance"},
+		// 	want: "Humse door jaoge kaise? Humko tum bhulaoge kaise? Hum vo khushbu hai jo saanson me baste hai, apni saanson ko rok paoge kaise?"
+		// },
+	}
+
+	for _, tc := range tcs {
+		buf := bytes.Buffer{}
+		err := runQuoteCmd(&buf, &quoteStorage, tc.config)
+		if tc.err != nil {
+			require.Error(t, err, tc.err, tc.desc)
+			continue
+		}
+		require.NoError(t, err, tc.desc)
+		require.Equal(t, tc.want, buf.String())
+	}
+
 }

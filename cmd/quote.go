@@ -1,9 +1,11 @@
 package cmd
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
+	"math/rand"
 )
 
 type QuoteConfig struct {
@@ -16,6 +18,60 @@ quote: returns a quote from stored list
 
 usage: quote` /* TODO: Add proper usage */
 )
+
+// func HandleQuote(w io.Writer, args [] string) error {
+// 	/* Open file */
+// 	f, err := os.Open(PERSIST_FILENAME)
+// 	if err != nil {
+// 		if errors.Is(err, fs.ErrNotExist) {
+// 			return ErrNoQuotesFound
+// 		}
+// 		return err
+// 	}
+// }
+
+func runQuoteCmd(w io.Writer, quoteStorage io.ReadWriteSeeker, config QuoteConfig) error {
+	var quotes []Quote
+
+	/* Read entire contents of quoteStorage */
+	_, err := quoteStorage.Seek(0, 0)
+	if err != nil {
+		return err
+	}
+
+	/* Unmarshal to slice of Quote */
+	data, err := io.ReadAll(quoteStorage)
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal(data, &quotes)
+	if err != nil {
+		return err
+	}
+
+	/* If no genre specified, write a random quote to writer */
+	if config.Genre == "" {
+		randIdx := rand.Intn(len(quotes))
+		randQuote := quotes[randIdx]
+		fmt.Fprint(w, randQuote.Text)
+	}
+
+	/* If genre specified, find genre specific quotes */
+	var genreSpecificQuotes []Quote
+	for _, quote := range quotes {
+		if quote.Genre == config.Genre {
+			genreSpecificQuotes = append(genreSpecificQuotes, quote)
+		}
+	}
+	if len(genreSpecificQuotes) == 0 {
+		return ErrNoGenreSpecificQuotesFound
+	}
+	randIdx := rand.Intn(len(genreSpecificQuotes))
+	randQuote := genreSpecificQuotes[randIdx]
+	fmt.Fprint(w, randQuote.Text)
+
+	return nil
+}
 
 func parseQuoteArgs(w io.Writer, args []string) (QuoteConfig, error) {
 	var config QuoteConfig
