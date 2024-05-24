@@ -37,6 +37,7 @@ func HandleQuote(w io.Writer, args []string) error {
 		}
 		return err
 	}
+	defer f.Close()
 
 	/* Run command */
 	err = runQuoteCmd(w, f, config)
