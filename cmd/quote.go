@@ -19,7 +19,7 @@ const (
 	QUOTE_USAGE_STRING = `
 quote: returns a quote from stored list
 
-usage: quote` /* TODO: Add proper usage */
+Usage: quote [options]` /* TODO: Add proper usage */
 )
 
 func HandleQuote(w io.Writer, args []string) error {
@@ -102,6 +102,10 @@ func parseQuoteArgs(w io.Writer, args []string) (QuoteConfig, error) {
 	fs.SetOutput(w)
 	fs.Usage = func() {
 		fmt.Fprint(w, QUOTE_USAGE_STRING)
+		fmt.Fprintln(w)
+		fmt.Fprintln(w)
+		fmt.Fprint(w, "Options:")
+		fmt.Fprintln(w)
 		fmt.Fprintln(w)
 		fs.PrintDefaults()
 	}

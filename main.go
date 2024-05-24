@@ -36,8 +36,4 @@ func printUsage() {
 	usageString := `
 usage: %s <add|quote> [-g genre] [quote]`
 	fmt.Fprint(os.Stderr, usageString)
-	fmt.Fprintln(os.Stderr)
-	fmt.Fprint(os.Stderr, cmd.ADD_USAGE_STRING)
-	fmt.Fprintln(os.Stderr)
-	fmt.Fprint(os.Stderr, cmd.QUOTE_USAGE_STRING)
 }

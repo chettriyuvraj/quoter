@@ -11,9 +11,9 @@ import (
 const (
 	PERSIST_FILENAME = "quotes"
 	ADD_USAGE_STRING = `
-add: add quotes
+add: add a new quote with an optional genre
 			
-usage: add` /* TODO: Write proper usage */
+Usage: add [options] <quote>` /* TODO: Write proper usage */
 )
 
 /* TODO: Do you want the quote to be a part of the config itself here? If not, might require a redesign */
@@ -93,6 +93,10 @@ func parseAddArgs(w io.Writer, args []string) (AddConfig, error) {
 	fs.SetOutput(w)
 	fs.Usage = func() {
 		fmt.Fprint(w, ADD_USAGE_STRING)
+		fmt.Fprintln(w)
+		fmt.Fprintln(w)
+		fmt.Fprint(w, "Options:")
+		fmt.Fprintln(w)
 		fmt.Fprintln(w)
 		fs.PrintDefaults()
 	}
