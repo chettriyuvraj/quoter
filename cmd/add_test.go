@@ -163,9 +163,9 @@ func TestParseAddArgs(t *testing.T) {
 			if err != flag.ErrHelp {
 				fmt.Fprint(&errWantBuf, err.Error())
 				fmt.Fprintln(&errWantBuf)
-				fmt.Fprintln(&errWantBuf, completeAddUsageString)
-				require.Equal(t, errWantBuf.String(), buf.String(), tc.desc)
 			}
+			fmt.Fprintln(&errWantBuf, completeAddUsageString)
+			require.Equal(t, errWantBuf.String(), buf.String(), tc.desc)
 			continue
 		}
 		require.NoError(t, err, tc.desc)
