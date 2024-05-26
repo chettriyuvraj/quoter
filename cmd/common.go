@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 )
 
@@ -56,4 +57,8 @@ func (rws *ReadWriteSeekerUtil) Write(b []byte) (n int, err error) {
 	}
 
 	return len(b), nil
+}
+
+func HandleError(w io.Writer, err error) { /* TODO: should this be unexported? */
+	fmt.Fprint(w, err.Error())
 }
