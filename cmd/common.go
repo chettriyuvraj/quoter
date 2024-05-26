@@ -6,7 +6,8 @@ import (
 	"io"
 )
 
-/* TODO: Must modify when flags or usage message changes  */
+/* TODO: Must modify whenever flags or usage message changes  */
+/* The strings below contain tabs and newlines in weird places to match the output for fs.Parse(), can we escape strings and test just the text? */
 var completeAddUsageString string = `
 add: add a new quote with an optional genre
 			
@@ -16,6 +17,16 @@ OPTIONS:
 
   -g string
     	genre to which the quote belongs (default "misc")`
+
+var completeQuoteUsageString string = `
+quote: returns a random quote from stored list
+
+Usage: quote [OPTIONS]
+
+OPTIONS:
+
+  -g string
+    	genre from which we want a quote`
 
 type Quote struct {
 	Text  string `json:"text"`

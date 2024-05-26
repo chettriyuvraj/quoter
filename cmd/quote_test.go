@@ -3,6 +3,7 @@ package cmd
 import (
 	"bytes"
 	"flag"
+	"fmt"
 	"io"
 	"testing"
 
@@ -53,6 +54,13 @@ func TestParseQuoteArgs(t *testing.T) {
 		got, err := parseQuoteArgs(&buf, tc.args)
 		if tc.err != nil {
 			require.Error(t, tc.err, err, tc.desc)
+			errWantBuf := bytes.Buffer{}
+			if err != flag.ErrHelp {
+				fmt.Fprint(&errWantBuf, err.Error())
+				fmt.Fprintln(&errWantBuf)
+			}
+			fmt.Fprintln(&errWantBuf, completeQuoteUsageString)
+			require.Equal(t, errWantBuf.String(), buf.String(), tc.desc)
 			continue
 		}
 		require.NoError(t, err, tc.desc)
