@@ -65,14 +65,12 @@ func TestParseQuoteArgs(t *testing.T) {
 func addQuotes(t *testing.T, quoteStorage io.ReadWriteSeeker) {
 	t.Helper()
 
-	outputBuf := bytes.NewBuffer([]byte{})
-
 	quoteConfigs := []AddConfig{
 		{genre: "misc", quote: "Phool hu gulab ka, chameli ka mat samajhna..Aashiq hu aapka apni saheli ka mat samajhna!"},
 		{genre: "romance", quote: "Humse door jaoge kaise? Humko tum bhulaoge kaise? Hum vo khushbu hai jo saanson me baste hai, apni saanson ko rok paoge kaise?"},
 	}
 	for _, config := range quoteConfigs {
-		err := runAddCmd(outputBuf, quoteStorage, config)
+		err := runAddCmd(quoteStorage, config)
 		require.NoError(t, err)
 	}
 
@@ -92,7 +90,7 @@ func TestRunQuoteCmd(t *testing.T) {
 		{
 			desc:   "quote of romance genre",
 			config: QuoteConfig{Genre: "romance"},
-			want:   "Humse door jaoge kaise? Humko tum bhulaoge kaise? Hum vo khushbu hai jo saanson me baste hai, apni saanson ko rok paoge kaise?",
+			want:   "Humse door jaoge kaise? Humko tum bhulaoge kaise? Hum vo khushbu hai jo saanson me baste hai, apni saanson ko rok paoge kaise?\n",
 		},
 		// { TODO: How to test random quote?
 		// 	desc:   "quote with no genre specified",

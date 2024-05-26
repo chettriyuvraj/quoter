@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -25,25 +26,31 @@ type AddConfig struct {
 func HandleAdd(w io.Writer, args []string) error {
 	config, err := parseAddArgs(w, args)
 	if err != nil {
+		/* ErrHelp already printed to 'w' by fs.Parse command */
+		if !errors.Is(err, flag.ErrHelp) {
+			HandleError(w, err)
+		}
 		return err
 	}
 
 	/* Read current quotes file, or create one if it doesn't exist */
 	f, err := os.OpenFile(PERSIST_FILENAME, os.O_RDWR|os.O_CREATE, 0777)
 	if err != nil {
+		HandleError(w, err)
 		return err
 	}
 	defer f.Close()
 
-	err = runAddCmd(w, f, config)
+	err = runAddCmd(f, config)
 	if err != nil {
+		HandleError(w, err)
 		return err
 	}
 
 	return nil
 }
 
-func runAddCmd(w io.Writer, quoteStorage io.ReadWriteSeeker, config AddConfig) error {
+func runAddCmd(quoteStorage io.ReadWriteSeeker, config AddConfig) error {
 
 	/* Read entire contents of quoteStorage */
 	_, err := quoteStorage.Seek(0, 0)
@@ -115,7 +122,3 @@ func parseAddArgs(w io.Writer, args []string) (AddConfig, error) {
 
 	return config, nil
 }
-
-// func validateFlagSet(fs *flag.FlagSet) error {
-
-// }

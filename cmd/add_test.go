@@ -28,9 +28,8 @@ func TestRunAddCmdSingleQuote(t *testing.T) {
 	}
 
 	for _, tc := range tcs {
-		buf := bytes.Buffer{}
 		quoteStorage := ReadWriteSeekerUtil{ReadSeeker: bytes.NewReader([]byte{})}
-		err := runAddCmd(&buf, &quoteStorage, tc.config)
+		err := runAddCmd(&quoteStorage, tc.config)
 		if tc.err != nil {
 			require.Error(t, err, tc.err, tc.desc)
 			continue
@@ -70,8 +69,7 @@ func TestRunAddCmdMultiQuote(t *testing.T) {
 	want := []Quote{}
 	quoteStorage := ReadWriteSeekerUtil{ReadSeeker: bytes.NewReader([]byte{})}
 	for _, tc := range tcs {
-		buf := bytes.Buffer{}
-		err := runAddCmd(&buf, &quoteStorage, tc.config)
+		err := runAddCmd(&quoteStorage, tc.config)
 		require.NoError(t, err, tc.desc)
 		want = append(want, tc.want...)
 	}

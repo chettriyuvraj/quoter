@@ -6,7 +6,6 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"io/fs"
 	"math/rand"
 	"os"
 )
@@ -17,24 +16,27 @@ type QuoteConfig struct {
 
 const (
 	QUOTE_USAGE_STRING = `
-quote: returns a quote from stored list
+quote: returns a random quote from stored list
 
 Usage: quote [OPTIONS]` /* TODO: Add proper usage */
 )
+
+/* TODO: Pass errwriter and stdoutwriter separately? */
 
 func HandleQuote(w io.Writer, args []string) error {
 	/* Parse flags */
 	config, err := parseQuoteArgs(w, args)
 	if err != nil {
+		if !errors.Is(err, flag.ErrHelp) {
+			HandleError(w, err)
+		}
 		return err
 	}
 
 	/* Open current quote file */
 	f, err := os.Open(PERSIST_FILENAME)
 	if err != nil {
-		if errors.Is(err, fs.ErrNotExist) {
-			return ErrNoQuotesFound
-		}
+		HandleError(w, err)
 		return err
 	}
 	defer f.Close()
@@ -42,6 +44,7 @@ func HandleQuote(w io.Writer, args []string) error {
 	/* Run command */
 	err = runQuoteCmd(w, f, config)
 	if err != nil {
+		HandleError(w, err)
 		return err
 	}
 
