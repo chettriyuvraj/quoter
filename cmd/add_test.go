@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"flag"
+	"fmt"
 	"io"
 	"os"
 	"testing"
@@ -141,6 +142,12 @@ func TestParseAddArgs(t *testing.T) {
 			output: ADD_USAGE_STRING,
 		},
 		{
+			desc:   "no positional args",
+			args:   []string{},
+			err:    ErrNoPositionalArgs,
+			output: ADD_USAGE_STRING,
+		},
+		{
 			desc: "no flags",
 			args: []string{"randomquote"},
 			want: AddConfig{genre: "misc", quote: "randomquote"},
@@ -152,6 +159,13 @@ func TestParseAddArgs(t *testing.T) {
 		got, err := parseAddArgs(&buf, tc.args)
 		if tc.err != nil {
 			require.Error(t, tc.err, err, tc.desc)
+			errWantBuf := bytes.Buffer{}
+			if err != flag.ErrHelp {
+				fmt.Fprint(&errWantBuf, err.Error())
+				fmt.Fprintln(&errWantBuf)
+				fmt.Fprintln(&errWantBuf, completeAddUsageString)
+				require.Equal(t, errWantBuf.String(), buf.String(), tc.desc)
+			}
 			continue
 		}
 		require.NoError(t, err, tc.desc)

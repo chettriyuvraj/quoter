@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"encoding/json"
-	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -26,13 +25,7 @@ type AddConfig struct {
 func HandleAdd(w io.Writer, args []string) error {
 	config, err := parseAddArgs(w, args)
 	if err != nil {
-		/* Parse errors already printed to 'w' by fs.Parse command */
-		// if !errors.Is(err, flag.ErrHelp) {
-		// 	HandleError(w, err)
-		// }
-		if errors.Is(err, ErrNoPositionalArgs) {
-			HandleError(w, err)
-		}
+		/* Parse errors already printed to 'w' by fs.Parse command + additional errors handled inside parseAddArgs() */
 		return err
 	}
 
@@ -119,6 +112,9 @@ func parseAddArgs(w io.Writer, args []string) (AddConfig, error) {
 
 	/* First positional arg treated as quote and others ignored */
 	if fs.NArg() == 0 {
+		fmt.Fprint(w, ErrNoPositionalArgs)
+		fmt.Fprintln(w)
+		fs.Usage()
 		return config, ErrNoPositionalArgs
 	}
 	config.quote = fs.Arg(0)

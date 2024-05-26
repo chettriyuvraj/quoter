@@ -6,6 +6,17 @@ import (
 	"io"
 )
 
+/* TODO: Must modify when flags or usage message changes  */
+var completeAddUsageString string = `
+add: add a new quote with an optional genre
+			
+Usage: add [OPTIONS] <quote>
+
+OPTIONS:
+
+  -g string
+    	genre to which the quote belongs (default "misc")`
+
 type Quote struct {
 	Text  string `json:"text"`
 	Genre string `json:"genre"`
