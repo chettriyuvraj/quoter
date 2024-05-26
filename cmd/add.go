@@ -26,8 +26,11 @@ type AddConfig struct {
 func HandleAdd(w io.Writer, args []string) error {
 	config, err := parseAddArgs(w, args)
 	if err != nil {
-		/* ErrHelp already printed to 'w' by fs.Parse command */
-		if !errors.Is(err, flag.ErrHelp) {
+		/* Parse errors already printed to 'w' by fs.Parse command */
+		// if !errors.Is(err, flag.ErrHelp) {
+		// 	HandleError(w, err)
+		// }
+		if errors.Is(err, ErrNoPositionalArgs) {
 			HandleError(w, err)
 		}
 		return err

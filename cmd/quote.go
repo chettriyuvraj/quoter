@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"encoding/json"
-	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -27,9 +26,7 @@ func HandleQuote(w io.Writer, args []string) error {
 	/* Parse flags */
 	config, err := parseQuoteArgs(w, args)
 	if err != nil {
-		if !errors.Is(err, flag.ErrHelp) {
-			HandleError(w, err)
-		}
+		/* Parse errors already printed to 'w' by fs.Parse command */
 		return err
 	}
 
