@@ -25,7 +25,7 @@ func main() {
 	}
 }
 
-/* No abstractions here - parsing and running simultaneously */
+/* No further abstractions here - parsing and running simultaneously */
 func handleCmd(stdout, stderr io.Writer, args []string) error {
 	var err error
 
