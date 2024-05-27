@@ -3,21 +3,22 @@ package cmd
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 )
 
+/* TODO: test errors? */
 func TestRunAddCmdSingleQuote(t *testing.T) {
 	tcs := []struct {
-		desc   string
-		config AddConfig
-		err    error
-		want   []Quote
+		desc    string
+		config  AddConfig
+		want    []Quote
+		wantErr error
 	}{
 		{
 			desc:   "single quote 1",
@@ -29,12 +30,16 @@ func TestRunAddCmdSingleQuote(t *testing.T) {
 	}
 
 	for _, tc := range tcs {
+		/* Add quote to a buffer using runAddCmd */
 		quoteStorage := ReadWriteSeekerUtil{ReadSeeker: bytes.NewReader([]byte{})}
 		err := runAddCmd(&quoteStorage, tc.config)
-		if tc.err != nil {
-			require.Error(t, err, tc.err, tc.desc)
+
+		/* Compare results */
+		if tc.wantErr != nil {
+			require.ErrorIs(t, err, tc.wantErr, tc.desc)
 			continue
 		}
+
 		require.NoError(t, err, tc.desc)
 		testQuoteStorage(t, tc.want, &quoteStorage, tc.desc)
 	}
@@ -42,13 +47,11 @@ func TestRunAddCmdSingleQuote(t *testing.T) {
 }
 
 /* Tests addition of multiple quotes sequentially, and subsequent JSON file formation*/
+/* TODO: test errors? */
 func TestRunAddCmdMultiQuote(t *testing.T) {
-	defer os.Remove(PERSIST_FILENAME)
-
 	tcs := []struct {
 		desc   string
 		config AddConfig
-		err    error
 		want   []Quote
 	}{
 		{
@@ -67,6 +70,7 @@ func TestRunAddCmdMultiQuote(t *testing.T) {
 		},
 	}
 
+	/* We are testing the addition of multiple quotes, so first compile all the quotes into a single 'want' array */
 	want := []Quote{}
 	quoteStorage := ReadWriteSeekerUtil{ReadSeeker: bytes.NewReader([]byte{})}
 	for _, tc := range tcs {
@@ -81,11 +85,14 @@ func TestRunAddCmdMultiQuote(t *testing.T) {
 func testQuoteStorage(t *testing.T, want []Quote, quoteStorage io.ReadSeeker, desc string) {
 	t.Helper()
 	var got []Quote
-	/* Quote storages seek pointer may have been moved around, but now we want its entire contents */
+
+	/* Quote storage's seek pointer may have been moved around, but now we want to read its entire contents, so bring seek back to 0 */
 	_, err := quoteStorage.Seek(0, 0)
 	if err != nil {
 		require.NoError(t, err, desc)
 	}
+
+	/* Read entire quote storage, unmarshal it and compare it to what we are expecting */
 	data, err := io.ReadAll(quoteStorage)
 	require.NoError(t, err, desc)
 	err = json.Unmarshal(data, &got)
@@ -112,65 +119,76 @@ TODO:
 func TestParseAddArgs(t *testing.T) {
 
 	tcs := []struct {
-		desc   string
-		args   []string
-		err    error
-		want   AddConfig
-		output string
+		desc       string
+		args       []string
+		wantErr    error
+		want       AddConfig
+		wantStdout string
+		wantStderr string
 	}{
 		{
-			desc:   "help flag",
-			args:   []string{"-h"},
-			err:    flag.ErrHelp,
-			output: ADD_USAGE_STRING,
+			desc:       "help flag",
+			args:       []string{"-h"},
+			wantErr:    flag.ErrHelp,
+			wantStderr: ADD_USAGE_STRING,
 		},
 		{
-			desc:   "non existent flag",
-			args:   []string{"-x"},
-			err:    flag.ErrHelp,
-			output: ADD_USAGE_STRING,
+			desc:       "non existent flag",
+			args:       []string{"-x"},
+			wantErr:    errors.New("flag provided but not defined: -x"),
+			wantStderr: ADD_USAGE_STRING,
 		},
 		{
-			desc: "genre flag only",
-			args: []string{"-g", "romance", "randomquote"},
-			want: AddConfig{genre: "romance", quote: "randomquote"},
+			desc:       "genre flag but no genre specifed",
+			args:       []string{"-g"},
+			wantErr:    errors.New("flag needs an argument: -g"),
+			wantStderr: ADD_USAGE_STRING,
 		},
 		{
-			desc:   "genre flag but no genre specifed",
-			args:   []string{"-g"},
-			err:    flag.ErrHelp,
-			output: ADD_USAGE_STRING,
-		},
-		{
-			desc:   "no positional args",
-			args:   []string{},
-			err:    ErrNoPositionalArgs,
-			output: ADD_USAGE_STRING,
+			desc:       "no positional args",
+			args:       []string{},
+			wantErr:    ErrNoPositionalArgs,
+			wantStderr: ADD_USAGE_STRING,
 		},
 		{
 			desc: "no flags",
 			args: []string{"randomquote"},
 			want: AddConfig{genre: "misc", quote: "randomquote"},
 		},
+		{
+			desc: "genre flag only",
+			args: []string{"-g", "romance", "randomquote"},
+			want: AddConfig{genre: "romance", quote: "randomquote"},
+		},
 	}
 
 	for _, tc := range tcs {
-		buf := bytes.Buffer{}
-		got, err := parseAddArgs(&buf, tc.args)
-		if tc.err != nil {
-			require.Error(t, tc.err, err, tc.desc)
+
+		/* Execute parse */
+		errBuf := bytes.Buffer{}
+		got, err := parseAddArgs(&errBuf, tc.args)
+
+		if tc.wantErr != nil {
+			/* Assert if error strings are the same - error not compared directly because internal errors are also returned which will not match with error.Is */
+			require.ErrorContains(t, err, tc.wantErr.Error(), tc.desc)
+
+			/* Formulate the error output we are expecting to receive: for 'errHelp' we are expecting usage string; for any other error we are expecting err + usageString  */
 			errWantBuf := bytes.Buffer{}
 			if err != flag.ErrHelp {
 				fmt.Fprint(&errWantBuf, err.Error())
 				fmt.Fprintln(&errWantBuf)
 			}
 			fmt.Fprintln(&errWantBuf, completeAddUsageString)
-			require.Equal(t, errWantBuf.String(), buf.String(), tc.desc)
+
+			/* Compare the error string we are expecting with the one we want */
+			require.Equal(t, errWantBuf.String(), errBuf.String(), tc.desc)
 			continue
 		}
+
+		/* Non-error case */
 		require.NoError(t, err, tc.desc)
 		require.Equal(t, tc.want, got, tc.desc)
-		require.Equal(t, tc.output, buf.String(), tc.desc)
+		require.Equal(t, tc.wantStderr, errBuf.String(), tc.desc) /* Standard output remains empty */
 
 	}
 }
