@@ -16,26 +16,25 @@ func TestParseQuoteArgs(t *testing.T) {
 		args       []string
 		want       QuoteConfig
 		wantErr    error
-		wantStdout string
-		wantStderr string
+		wantErrStr string
 	}{
 		{
 			desc:       "help flag",
 			args:       []string{"-h"},
 			wantErr:    flag.ErrHelp,
-			wantStderr: completeQuoteUsageString + "\n",
+			wantErrStr: completeQuoteUsageString + "\n",
 		},
 		{
 			desc:       "non existent flag",
 			args:       []string{"-x"},
 			wantErr:    errors.New("flag provided but not defined: -x"),
-			wantStderr: "flag provided but not defined: -x" + "\n" + completeQuoteUsageString + "\n",
+			wantErrStr: "flag provided but not defined: -x" + "\n" + completeQuoteUsageString + "\n",
 		},
 		{
 			desc:       "genre flag but no genre specifed",
 			args:       []string{"-g"},
 			wantErr:    errors.New("flag needs an argument: -g"),
-			wantStderr: "flag needs an argument: -g" + "\n" + completeQuoteUsageString + "\n",
+			wantErrStr: "flag needs an argument: -g" + "\n" + completeQuoteUsageString + "\n",
 		},
 		{
 			desc: "genre flag only",
@@ -52,22 +51,21 @@ func TestParseQuoteArgs(t *testing.T) {
 	for _, tc := range tcs {
 
 		/* Execute parse */
-		errBuf := bytes.Buffer{}
-		got, err := parseQuoteArgs(&errBuf, tc.args)
+		got, err, gotErrStr := parseQuoteArgs(tc.args)
 
 		if tc.wantErr != nil {
 			/* Assert if error strings are the same - error not compared directly because internal errors are also returned which will not match with error.Is */
 			require.ErrorContains(t, err, tc.wantErr.Error(), tc.desc)
 
 			/* Compare the error string we are expecting with the one we want */
-			require.Equal(t, tc.wantStderr, errBuf.String(), tc.desc)
+			require.Equal(t, tc.wantErrStr, gotErrStr, tc.desc)
 			continue
 		}
 
 		/* Non-error case */
 		require.NoError(t, err, tc.desc)
 		require.Equal(t, tc.want, got, tc.desc)
-		require.Equal(t, tc.wantStderr, errBuf.String(), tc.desc) /* Standard output remains empty */
+		require.Equal(t, tc.wantErrStr, gotErrStr, tc.desc) /* Standard output remains empty */
 
 	}
 }

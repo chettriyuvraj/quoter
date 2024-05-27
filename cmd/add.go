@@ -1,7 +1,9 @@
 package cmd
 
 import (
+	"bytes"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -24,9 +26,9 @@ type AddConfig struct {
 }
 
 func HandleAdd(stdout, stderr io.Writer, args []string) error {
-	config, err := parseAddArgs(stderr, args)
+	config, err, errStr := parseAddArgs(args)
 	if err != nil {
-		/* Parse errors already printed to 'stderr' by fs.Parse command + additional errors handled inside parseAddArgs() */
+		HandleError(stderr, errors.New(errStr))
 		return err
 	}
 
@@ -106,38 +108,38 @@ func addQuoteToList(config AddConfig, quotes []Quote) []Quote {
 	return append(quotes, Quote{Text: config.quote, Genre: config.genre})
 }
 
-func parseAddArgs(stderr io.Writer, args []string) (AddConfig, error) {
-	var config AddConfig
+func parseAddArgs(args []string) (config AddConfig, err error, errStr string) {
+	var errBuf bytes.Buffer
 
 	/* Setup */
 	fs := flag.NewFlagSet("add", flag.ContinueOnError)
 	fs.StringVar(&config.genre, "g", "misc", "genre to which the quote belongs")
 
-	fs.SetOutput(stderr)
+	fs.SetOutput(&errBuf)
 	fs.Usage = func() {
-		fmt.Fprint(stderr, ADD_USAGE_STRING)
-		fmt.Fprintln(stderr)
-		fmt.Fprintln(stderr)
-		fmt.Fprint(stderr, "OPTIONS:")
-		fmt.Fprintln(stderr)
-		fmt.Fprintln(stderr)
+		fmt.Fprint(&errBuf, ADD_USAGE_STRING)
+		fmt.Fprintln(&errBuf)
+		fmt.Fprintln(&errBuf)
+		fmt.Fprint(&errBuf, "OPTIONS:")
+		fmt.Fprintln(&errBuf)
+		fmt.Fprintln(&errBuf)
 		fs.PrintDefaults()
 	}
 
 	/* Parse */
-	err := fs.Parse(args)
+	err = fs.Parse(args)
 	if err != nil {
-		return config, err
+		return config, err, errBuf.String()
 	}
 
 	/* First positional arg treated as quote and others ignored */
 	if fs.NArg() == 0 {
-		fmt.Fprint(stderr, ErrNoPositionalArgs)
-		fmt.Fprintln(stderr)
+		fmt.Fprint(&errBuf, ErrNoPositionalArgs)
+		fmt.Fprintln(&errBuf)
 		fs.Usage()
-		return config, ErrNoPositionalArgs
+		return config, ErrNoPositionalArgs, errBuf.String()
 	}
 	config.quote = fs.Arg(0)
 
-	return config, nil
+	return config, nil, errBuf.String()
 }

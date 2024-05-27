@@ -1,7 +1,9 @@
 package cmd
 
 import (
+	"bytes"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -24,9 +26,9 @@ Usage: quote [OPTIONS]` /* TODO: Add proper usage */
 
 func HandleQuote(stdout, stderr io.Writer, args []string) error {
 	/* Parse flags */
-	config, err := parseQuoteArgs(stderr, args)
+	config, err, errStr := parseQuoteArgs(args)
 	if err != nil {
-		/* Parse errors already printed to 'stderr' by fs.Parse command */
+		HandleError(stderr, errors.New(errStr))
 		return err
 	}
 
@@ -89,27 +91,27 @@ func getRandomQuote(quoteStorage io.ReadSeeker, config QuoteConfig) (Quote, erro
 	return genreSpecificQuotes[randIdx], nil
 }
 
-func parseQuoteArgs(stderr io.Writer, args []string) (QuoteConfig, error) {
-	var config QuoteConfig
+func parseQuoteArgs(args []string) (config QuoteConfig, err error, errStr string) {
+	var errBuf bytes.Buffer
 
 	fs := flag.NewFlagSet("quote", flag.ContinueOnError)
 	fs.StringVar(&config.Genre, "g", "", "genre from which we want a quote")
 
-	fs.SetOutput(stderr)
+	fs.SetOutput(&errBuf)
 	fs.Usage = func() {
-		fmt.Fprint(stderr, QUOTE_USAGE_STRING)
-		fmt.Fprintln(stderr)
-		fmt.Fprintln(stderr)
-		fmt.Fprint(stderr, "OPTIONS:")
-		fmt.Fprintln(stderr)
-		fmt.Fprintln(stderr)
+		fmt.Fprint(&errBuf, QUOTE_USAGE_STRING)
+		fmt.Fprintln(&errBuf)
+		fmt.Fprintln(&errBuf)
+		fmt.Fprint(&errBuf, "OPTIONS:")
+		fmt.Fprintln(&errBuf)
+		fmt.Fprintln(&errBuf)
 		fs.PrintDefaults()
 	}
 
-	err := fs.Parse(args)
+	err = fs.Parse(args)
 	if err != nil {
-		return config, err
+		return config, err, errBuf.String()
 	}
 
-	return config, nil
+	return config, nil, errBuf.String()
 }
