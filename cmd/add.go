@@ -38,55 +38,72 @@ func HandleAdd(stdout, stderr io.Writer, args []string) error {
 	}
 	defer f.Close()
 
-	err = addQuoteToStorage(f, config)
+	/* Parse all quotes in current file */
+	quotes, err := parseQuotes(f)
 	if err != nil {
 		HandleError(stderr, err)
 		return err
 	}
+
+	/* Add new quote to current list of quotes */
+	quotes = addQuoteToList(config, quotes)
+	if err != nil {
+		HandleError(stderr, err)
+		return err
+	}
+
+	/* Rewrite entire file */
+	writeData, err := json.Marshal(quotes)
+	if err != nil {
+		HandleError(stderr, err)
+		return err
+	}
+	_, err = f.Seek(0, 0)
+	if err != nil {
+		HandleError(stderr, err)
+		return err
+	}
+	_, err = f.Write(writeData)
+	if err != nil {
+		HandleError(stderr, err)
+		return err
+	}
+
+	/* Write success to output */
 	fmt.Fprint(stdout, ADD_SUCCESS_MSG)
 	fmt.Fprintln(stdout)
 
 	return nil
 }
 
-func addQuoteToStorage(quoteStorage io.ReadWriteSeeker, config AddConfig) error {
+/* Parse raw json to quote struct */
+func parseQuotes(quoteStorage io.ReadSeeker) ([]Quote, error) {
+	var quotes []Quote
 
 	/* Read entire contents of quoteStorage */
 	_, err := quoteStorage.Seek(0, 0)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	data, err := io.ReadAll(quoteStorage)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	/* Quotes are stored as JSON, parse them */
-	var quotes []Quote
 	if len(data) > 0 {
 		err = json.Unmarshal(data, &quotes)
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
 
-	/* Append current quote to current set of quotes and rewrite entire file */
-	quotes = append(quotes, Quote{Text: config.quote, Genre: config.genre})
-	writeData, err := json.Marshal(quotes)
-	if err != nil {
-		return err
-	}
-	_, err = quoteStorage.Seek(0, 0)
-	if err != nil {
-		return err
-	}
-	_, err = quoteStorage.Write(writeData)
-	if err != nil {
-		return err
-	}
+	return quotes, nil
+}
 
-	return nil
+func addQuoteToList(config AddConfig, quotes []Quote) []Quote {
+	return append(quotes, Quote{Text: config.quote, Genre: config.genre})
 }
 
 func parseAddArgs(stderr io.Writer, args []string) (AddConfig, error) {

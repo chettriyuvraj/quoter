@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"flag"
-	"io"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -73,24 +72,9 @@ func TestParseQuoteArgs(t *testing.T) {
 	}
 }
 
-func addRandomQuotes(t *testing.T, quoteStorage io.ReadWriteSeeker) {
-	t.Helper()
-
-	quoteConfigs := []AddConfig{
-		{genre: "misc", quote: "Phool hu gulab ka, chameli ka mat samajhna..Aashiq hu aapka apni saheli ka mat samajhna!"},
-		{genre: "romance", quote: "Humse door jaoge kaise? Humko tum bhulaoge kaise? Hum vo khushbu hai jo saanson me baste hai, apni saanson ko rok paoge kaise?"},
-	}
-	for _, config := range quoteConfigs {
-		err := addQuoteToStorage(quoteStorage, config)
-		require.NoError(t, err)
-	}
-
-}
-
 func TestGetRandomQuoteCmd(t *testing.T) {
-	/* Add quotes to a storage first */
-	quoteStorage := ReadWriteSeekerUtil{ReadSeeker: bytes.NewReader([]byte{})}
-	addRandomQuotes(t, &quoteStorage)
+	jsonData := `[{"text":"if not us, then who? if not now, then when?","genre":"revolution"},{"text":"abki baar bichde toh khwabo me mile..jaise sukhe hue phool kitabo me mile","genre":"romance"},{"text":"if the lessons of history teach us anything, it is that no one learns the lessons that history teaches us","genre":"misc"},{"text":"I'd love to say you make me weak in the knees, but to be quite honest, and completely upfront - you make my body forget it has knees at all","genre":"love"}]`
+	quoteStorage := bytes.NewReader([]byte(jsonData))
 
 	tcs := []struct {
 		desc    string
@@ -101,7 +85,7 @@ func TestGetRandomQuoteCmd(t *testing.T) {
 		{
 			desc:   "quote of romance genre",
 			config: QuoteConfig{Genre: "romance"},
-			want:   Quote{Genre: "romance", Text: "Humse door jaoge kaise? Humko tum bhulaoge kaise? Hum vo khushbu hai jo saanson me baste hai, apni saanson ko rok paoge kaise?"},
+			want:   Quote{Genre: "romance", Text: "abki baar bichde toh khwabo me mile..jaise sukhe hue phool kitabo me mile"},
 		},
 		// { TODO: How to test random quote?
 		// 	desc:   "quote with no genre specified",
@@ -111,7 +95,7 @@ func TestGetRandomQuoteCmd(t *testing.T) {
 	}
 
 	for _, tc := range tcs {
-		got, err := getRandomQuote(&quoteStorage, tc.config)
+		got, err := getRandomQuote(quoteStorage, tc.config)
 		if tc.wantErr != nil {
 			require.ErrorIs(t, err, tc.wantErr, tc.desc)
 			continue

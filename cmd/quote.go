@@ -50,7 +50,7 @@ func HandleQuote(stdout, stderr io.Writer, args []string) error {
 	return nil
 }
 
-func getRandomQuote(quoteStorage io.ReadWriteSeeker, config QuoteConfig) (Quote, error) {
+func getRandomQuote(quoteStorage io.ReadSeeker, config QuoteConfig) (Quote, error) {
 	var quotes []Quote
 
 	/* Read entire contents of quoteStorage */

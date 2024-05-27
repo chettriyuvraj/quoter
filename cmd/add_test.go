@@ -2,102 +2,12 @@ package cmd
 
 import (
 	"bytes"
-	"encoding/json"
 	"errors"
 	"flag"
-	"io"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 )
-
-/* TODO: test errors? */
-func TestAddQuoteToStorageSingle(t *testing.T) {
-	tcs := []struct {
-		desc    string
-		config  AddConfig
-		want    []Quote
-		wantErr error
-	}{
-		{
-			desc:   "single quote 1",
-			config: AddConfig{quote: "Phool hu gulab ka, chameli ka mat samajhna..Aashiq hu aapka apni saheli ka mat samajhna!", genre: "misc"},
-			want: []Quote{
-				{Text: "Phool hu gulab ka, chameli ka mat samajhna..Aashiq hu aapka apni saheli ka mat samajhna!", Genre: "misc"},
-			},
-		},
-	}
-
-	for _, tc := range tcs {
-		/* Add quote to a buffer using runAddCmd */
-		quoteStorage := ReadWriteSeekerUtil{ReadSeeker: bytes.NewReader([]byte{})}
-		err := addQuoteToStorage(&quoteStorage, tc.config)
-
-		/* Compare results */
-		if tc.wantErr != nil {
-			require.ErrorIs(t, err, tc.wantErr, tc.desc)
-			continue
-		}
-
-		require.NoError(t, err, tc.desc)
-		testQuoteStorage(t, tc.want, &quoteStorage, tc.desc)
-	}
-
-}
-
-/* Tests addition of multiple quotes sequentially, and subsequent JSON file formation*/
-/* TODO: test errors? */
-func TestAddQuoteToStorageMulti(t *testing.T) {
-	tcs := []struct {
-		desc   string
-		config AddConfig
-		want   []Quote
-	}{
-		{
-			desc:   "multi quote 1",
-			config: AddConfig{genre: "misc", quote: "Phool hu gulab ka, chameli ka mat samajhna..Aashiq hu aapka apni saheli ka mat samajhna!"},
-			want: []Quote{
-				{Text: "Phool hu gulab ka, chameli ka mat samajhna..Aashiq hu aapka apni saheli ka mat samajhna!", Genre: "misc"},
-			},
-		},
-		{
-			desc:   "multi quote 2",
-			config: AddConfig{genre: "romance", quote: "Humse door jaoge kaise? Humko tum bhulaoge kaise? Hum vo khushbu hai jo saanson me baste hai, apni saanson ko rok paoge kaise?"},
-			want: []Quote{
-				{Text: "Humse door jaoge kaise? Humko tum bhulaoge kaise? Hum vo khushbu hai jo saanson me baste hai, apni saanson ko rok paoge kaise?", Genre: "romance"},
-			},
-		},
-	}
-
-	/* We are testing the addition of multiple quotes, so first compile all the quotes into a single 'want' array */
-	want := []Quote{}
-	quoteStorage := ReadWriteSeekerUtil{ReadSeeker: bytes.NewReader([]byte{})}
-	for _, tc := range tcs {
-		err := addQuoteToStorage(&quoteStorage, tc.config)
-		require.NoError(t, err, tc.desc)
-		want = append(want, tc.want...)
-	}
-	testQuoteStorage(t, want, &quoteStorage, "test multiple adds")
-
-}
-
-func testQuoteStorage(t *testing.T, want []Quote, quoteStorage io.ReadSeeker, desc string) {
-	t.Helper()
-	var got []Quote
-
-	/* Quote storage's seek pointer may have been moved around, but now we want to read its entire contents, so bring seek back to 0 */
-	_, err := quoteStorage.Seek(0, 0)
-	if err != nil {
-		require.NoError(t, err, desc)
-	}
-
-	/* Read entire quote storage, unmarshal it and compare it to what we are expecting */
-	data, err := io.ReadAll(quoteStorage)
-	require.NoError(t, err, desc)
-	err = json.Unmarshal(data, &got)
-	require.NoError(t, err, desc)
-	require.Equal(t, want, got, desc)
-}
 
 /*
 TODO:
@@ -182,4 +92,18 @@ func TestParseAddArgs(t *testing.T) {
 		require.Equal(t, tc.wantStderr, errBuf.String(), tc.desc) /* Standard output remains empty */
 
 	}
+}
+
+func TestParseQuotes(t *testing.T) {
+	jsonData := `[{"text":"if not us, then who? if not now, then when?","genre":"revolution"},{"text":"abki baar bichde toh khwabo me mile..jaise sukhe hue phool kitabo me mile","genre":"romance"},{"text":"if the lessons of history teach us anything, it is that no one learns the lessons that history teaches us","genre":"misc"},{"text":"I'd love to say you make me weak in the knees, but to be quite honest, and completely upfront - you make my body forget it has knees at all","genre":"love"}]`
+	quoteStorage := bytes.NewReader([]byte(jsonData))
+	want := []Quote{
+		{Text: "if not us, then who? if not now, then when?", Genre: "revolution"},
+		{Text: "abki baar bichde toh khwabo me mile..jaise sukhe hue phool kitabo me mile", Genre: "romance"},
+		{Text: "if the lessons of history teach us anything, it is that no one learns the lessons that history teaches us", Genre: "misc"},
+		{Text: "I'd love to say you make me weak in the knees, but to be quite honest, and completely upfront - you make my body forget it has knees at all", Genre: "love"},
+	}
+	got, err := parseQuotes(quoteStorage)
+	require.NoError(t, err)
+	require.Equal(t, want, got)
 }
