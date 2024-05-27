@@ -19,14 +19,14 @@ Usage: quoter <COMMAND> [OPTIONS]` /* TODO add dynamic command name */
 )
 
 func main() {
-	err := runCmd(os.Stdout, os.Stderr, os.Args[1:])
+	err := handleCmd(os.Stdout, os.Stderr, os.Args[1:])
 	if err != nil {
 		os.Exit(1)
 	}
 }
 
 /* No abstractions here - parsing and running simultaneously */
-func runCmd(stdout, stderr io.Writer, args []string) error {
+func handleCmd(stdout, stderr io.Writer, args []string) error {
 	var err error
 
 	fs := flag.NewFlagSet("quoter", flag.ContinueOnError)
