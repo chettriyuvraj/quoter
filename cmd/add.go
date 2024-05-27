@@ -38,7 +38,7 @@ func HandleAdd(stdout, stderr io.Writer, args []string) error {
 	}
 	defer f.Close()
 
-	err = runAddCmd(f, config)
+	err = addQuoteToStorage(f, config)
 	if err != nil {
 		HandleError(stderr, err)
 		return err
@@ -49,7 +49,7 @@ func HandleAdd(stdout, stderr io.Writer, args []string) error {
 	return nil
 }
 
-func runAddCmd(quoteStorage io.ReadWriteSeeker, config AddConfig) error {
+func addQuoteToStorage(quoteStorage io.ReadWriteSeeker, config AddConfig) error {
 
 	/* Read entire contents of quoteStorage */
 	_, err := quoteStorage.Seek(0, 0)

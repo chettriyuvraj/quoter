@@ -13,7 +13,7 @@ import (
 )
 
 /* TODO: test errors? */
-func TestRunAddCmdSingleQuote(t *testing.T) {
+func TestAddQuoteToStorageSingle(t *testing.T) {
 	tcs := []struct {
 		desc    string
 		config  AddConfig
@@ -32,7 +32,7 @@ func TestRunAddCmdSingleQuote(t *testing.T) {
 	for _, tc := range tcs {
 		/* Add quote to a buffer using runAddCmd */
 		quoteStorage := ReadWriteSeekerUtil{ReadSeeker: bytes.NewReader([]byte{})}
-		err := runAddCmd(&quoteStorage, tc.config)
+		err := addQuoteToStorage(&quoteStorage, tc.config)
 
 		/* Compare results */
 		if tc.wantErr != nil {
@@ -48,7 +48,7 @@ func TestRunAddCmdSingleQuote(t *testing.T) {
 
 /* Tests addition of multiple quotes sequentially, and subsequent JSON file formation*/
 /* TODO: test errors? */
-func TestRunAddCmdMultiQuote(t *testing.T) {
+func TestAddQuoteToStorageMulti(t *testing.T) {
 	tcs := []struct {
 		desc   string
 		config AddConfig
@@ -74,7 +74,7 @@ func TestRunAddCmdMultiQuote(t *testing.T) {
 	want := []Quote{}
 	quoteStorage := ReadWriteSeekerUtil{ReadSeeker: bytes.NewReader([]byte{})}
 	for _, tc := range tcs {
-		err := runAddCmd(&quoteStorage, tc.config)
+		err := addQuoteToStorage(&quoteStorage, tc.config)
 		require.NoError(t, err, tc.desc)
 		want = append(want, tc.want...)
 	}

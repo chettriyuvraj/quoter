@@ -50,9 +50,9 @@ func runCmd(stdout, stderr io.Writer, args []string) error {
 	}
 	switch fs.Arg(0) {
 	case "add":
-		err = cmd.HandleAdd(stderr, stdout, args[1:])
+		err = cmd.HandleAdd(stdout, stderr, args[1:])
 	case "quote":
-		err = cmd.HandleQuote(stderr, args[1:])
+		err = cmd.HandleQuote(stdout, stderr, args[1:])
 	default:
 		fmt.Fprint(stderr, ErrInvalidSubCmd.Error())
 		fmt.Fprintln(stderr)
@@ -71,5 +71,5 @@ func printUsage(stdout, stderr io.Writer) {
 	fmt.Fprint(stderr, "COMMANDS:")
 	fmt.Fprintln(stderr)
 	cmd.HandleAdd(stdout, stderr, []string{"-h"})
-	cmd.HandleQuote(stderr, []string{"-h"})
+	cmd.HandleQuote(stdout, stderr, []string{"-h"})
 }

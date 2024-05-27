@@ -22,9 +22,9 @@ Usage: quote [OPTIONS]` /* TODO: Add proper usage */
 
 /* TODO: Pass errwriter and stdoutwriter separately? */
 
-func HandleQuote(w io.Writer, args []string) error {
+func HandleQuote(stdout, stderr io.Writer, args []string) error {
 	/* Parse flags */
-	config, err := parseQuoteArgs(w, args)
+	config, err := parseQuoteArgs(stderr, args)
 	if err != nil {
 		/* Parse errors already printed to 'w' by fs.Parse command */
 		return err
@@ -33,47 +33,46 @@ func HandleQuote(w io.Writer, args []string) error {
 	/* Open current quote file */
 	f, err := os.Open(PERSIST_FILENAME)
 	if err != nil {
-		HandleError(w, err)
+		HandleError(stderr, err)
 		return err
 	}
 	defer f.Close()
 
 	/* Run command */
-	err = runQuoteCmd(w, f, config)
+	quote, err := getRandomQuote(f, config)
 	if err != nil {
-		HandleError(w, err)
+		HandleError(stderr, err)
 		return err
 	}
+	fmt.Fprint(stdout, quote.Text)
+	fmt.Fprintln(stdout)
 
 	return nil
 }
 
-func runQuoteCmd(w io.Writer, quoteStorage io.ReadWriteSeeker, config QuoteConfig) error {
+func getRandomQuote(quoteStorage io.ReadWriteSeeker, config QuoteConfig) (Quote, error) {
 	var quotes []Quote
 
 	/* Read entire contents of quoteStorage */
 	_, err := quoteStorage.Seek(0, 0)
 	if err != nil {
-		return err
+		return Quote{}, err
 	}
 
 	/* Unmarshal to slice of Quote */
 	data, err := io.ReadAll(quoteStorage)
 	if err != nil {
-		return err
+		return Quote{}, err
 	}
 	err = json.Unmarshal(data, &quotes)
 	if err != nil {
-		return err
+		return Quote{}, err
 	}
 
 	/* If no genre specified, write a random quote to writer */
 	if config.Genre == "" {
 		randIdx := rand.Intn(len(quotes))
-		randQuote := quotes[randIdx]
-		fmt.Fprint(w, randQuote.Text)
-		fmt.Fprintln(w)
-		return nil
+		return quotes[randIdx], err
 	}
 
 	/* If genre specified, find genre specific quotes */
@@ -84,14 +83,10 @@ func runQuoteCmd(w io.Writer, quoteStorage io.ReadWriteSeeker, config QuoteConfi
 		}
 	}
 	if len(genreSpecificQuotes) == 0 {
-		return ErrNoGenreSpecificQuotesFound
+		return Quote{}, ErrNoGenreSpecificQuotesFound
 	}
 	randIdx := rand.Intn(len(genreSpecificQuotes))
-	randQuote := genreSpecificQuotes[randIdx]
-	fmt.Fprint(w, randQuote.Text)
-	fmt.Fprintln(w)
-
-	return nil
+	return genreSpecificQuotes[randIdx], nil
 }
 
 func parseQuoteArgs(stderr io.Writer, args []string) (QuoteConfig, error) {

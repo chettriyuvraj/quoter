@@ -82,7 +82,7 @@ func TestParseQuoteArgs(t *testing.T) {
 	}
 }
 
-func addQuotes(t *testing.T, quoteStorage io.ReadWriteSeeker) {
+func addRandomQuotes(t *testing.T, quoteStorage io.ReadWriteSeeker) {
 	t.Helper()
 
 	quoteConfigs := []AddConfig{
@@ -90,27 +90,27 @@ func addQuotes(t *testing.T, quoteStorage io.ReadWriteSeeker) {
 		{genre: "romance", quote: "Humse door jaoge kaise? Humko tum bhulaoge kaise? Hum vo khushbu hai jo saanson me baste hai, apni saanson ko rok paoge kaise?"},
 	}
 	for _, config := range quoteConfigs {
-		err := runAddCmd(quoteStorage, config)
+		err := addQuoteToStorage(quoteStorage, config)
 		require.NoError(t, err)
 	}
 
 }
 
-func TestRunQuoteCmd(t *testing.T) {
+func TestGetRandomQuoteCmd(t *testing.T) {
 	/* Add quotes to a storage first */
 	quoteStorage := ReadWriteSeekerUtil{ReadSeeker: bytes.NewReader([]byte{})}
-	addQuotes(t, &quoteStorage)
+	addRandomQuotes(t, &quoteStorage)
 
 	tcs := []struct {
-		desc   string
-		config QuoteConfig
-		err    error
-		want   string
+		desc    string
+		config  QuoteConfig
+		want    Quote
+		wantErr error
 	}{
 		{
 			desc:   "quote of romance genre",
 			config: QuoteConfig{Genre: "romance"},
-			want:   "Humse door jaoge kaise? Humko tum bhulaoge kaise? Hum vo khushbu hai jo saanson me baste hai, apni saanson ko rok paoge kaise?\n",
+			want:   Quote{Genre: "romance", Text: "Humse door jaoge kaise? Humko tum bhulaoge kaise? Hum vo khushbu hai jo saanson me baste hai, apni saanson ko rok paoge kaise?"},
 		},
 		// { TODO: How to test random quote?
 		// 	desc:   "quote with no genre specified",
@@ -120,14 +120,13 @@ func TestRunQuoteCmd(t *testing.T) {
 	}
 
 	for _, tc := range tcs {
-		buf := bytes.Buffer{}
-		err := runQuoteCmd(&buf, &quoteStorage, tc.config)
-		if tc.err != nil {
-			require.Error(t, err, tc.err, tc.desc)
+		got, err := getRandomQuote(&quoteStorage, tc.config)
+		if tc.wantErr != nil {
+			require.ErrorIs(t, err, tc.wantErr, tc.desc)
 			continue
 		}
 		require.NoError(t, err, tc.desc)
-		require.Equal(t, tc.want, buf.String())
+		require.Equal(t, tc.want, got)
 	}
 
 }
