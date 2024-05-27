@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"flag"
-	"fmt"
 	"io"
 	"testing"
 
@@ -25,19 +24,19 @@ func TestParseQuoteArgs(t *testing.T) {
 			desc:       "help flag",
 			args:       []string{"-h"},
 			wantErr:    flag.ErrHelp,
-			wantStderr: QUOTE_USAGE_STRING,
+			wantStderr: completeQuoteUsageString + "\n",
 		},
 		{
 			desc:       "non existent flag",
 			args:       []string{"-x"},
 			wantErr:    errors.New("flag provided but not defined: -x"),
-			wantStderr: QUOTE_USAGE_STRING,
+			wantStderr: "flag provided but not defined: -x" + "\n" + completeQuoteUsageString + "\n",
 		},
 		{
 			desc:       "genre flag but no genre specifed",
 			args:       []string{"-g"},
 			wantErr:    errors.New("flag needs an argument: -g"),
-			wantStderr: QUOTE_USAGE_STRING,
+			wantStderr: "flag needs an argument: -g" + "\n" + completeQuoteUsageString + "\n",
 		},
 		{
 			desc: "genre flag only",
@@ -61,16 +60,8 @@ func TestParseQuoteArgs(t *testing.T) {
 			/* Assert if error strings are the same - error not compared directly because internal errors are also returned which will not match with error.Is */
 			require.ErrorContains(t, err, tc.wantErr.Error(), tc.desc)
 
-			/* Formulate the error output we are expecting to receive: for 'errHelp' we are expecting usage string; for any other error we are expecting err + usageString  */
-			errWantBuf := bytes.Buffer{}
-			if err != flag.ErrHelp {
-				fmt.Fprint(&errWantBuf, err.Error())
-				fmt.Fprintln(&errWantBuf)
-			}
-			fmt.Fprintln(&errWantBuf, completeQuoteUsageString)
-
 			/* Compare the error string we are expecting with the one we want */
-			require.Equal(t, errWantBuf.String(), errBuf.String(), tc.desc)
+			require.Equal(t, tc.wantStderr, errBuf.String(), tc.desc)
 			continue
 		}
 
