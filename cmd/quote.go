@@ -26,7 +26,7 @@ func HandleQuote(stdout, stderr io.Writer, args []string) error {
 	/* Parse flags */
 	config, err := parseQuoteArgs(stderr, args)
 	if err != nil {
-		/* Parse errors already printed to 'w' by fs.Parse command */
+		/* Parse errors already printed to 'stderr' by fs.Parse command */
 		return err
 	}
 

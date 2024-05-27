@@ -34,4 +34,5 @@ type Quote struct {
 
 func HandleError(stderr io.Writer, err error) { /* TODO: should this be unexported? */
 	fmt.Fprint(stderr, err.Error())
+	fmt.Fprintln(stderr)
 }

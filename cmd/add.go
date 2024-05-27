@@ -26,7 +26,7 @@ type AddConfig struct {
 func HandleAdd(stdout, stderr io.Writer, args []string) error {
 	config, err := parseAddArgs(stderr, args)
 	if err != nil {
-		/* Parse errors already printed to 'w' by fs.Parse command + additional errors handled inside parseAddArgs() */
+		/* Parse errors already printed to 'stderr' by fs.Parse command + additional errors handled inside parseAddArgs() */
 		return err
 	}
 
