@@ -19,20 +19,20 @@ Usage: quoter <COMMAND> [OPTIONS]` /* TODO add dynamic command name */
 )
 
 func main() {
-	err := runCmd(os.Stderr, os.Args[1:])
+	err := runCmd(os.Stdout, os.Stderr, os.Args[1:])
 	if err != nil {
 		os.Exit(1)
 	}
 }
 
 /* No abstractions here - parsing and running simultaneously */
-func runCmd(w io.Writer, args []string) error {
+func runCmd(stdout, stderr io.Writer, args []string) error {
 	var err error
 
 	fs := flag.NewFlagSet("quoter", flag.ContinueOnError)
-	fs.SetOutput(w)
+	fs.SetOutput(stderr)
 	fs.Usage = func() {
-		printUsage(w)
+		printUsage(stdout, stderr)
 	}
 
 	/* Parse */
@@ -43,20 +43,20 @@ func runCmd(w io.Writer, args []string) error {
 
 	/* First positional arg treated as sub-command */
 	if fs.NArg() == 0 {
-		fmt.Fprint(w, ErrNoPositionalArgs.Error())
-		fmt.Fprintln(w)
-		printUsage(w)
+		fmt.Fprint(stderr, ErrNoPositionalArgs.Error())
+		fmt.Fprintln(stderr)
+		printUsage(stdout, stderr)
 		return ErrNoPositionalArgs
 	}
 	switch fs.Arg(0) {
 	case "add":
-		err = cmd.HandleAdd(w, args[1:])
+		err = cmd.HandleAdd(stderr, stdout, args[1:])
 	case "quote":
-		err = cmd.HandleQuote(w, args[1:])
+		err = cmd.HandleQuote(stderr, args[1:])
 	default:
-		fmt.Fprint(w, ErrInvalidSubCmd.Error())
-		fmt.Fprintln(w)
-		printUsage(w)
+		fmt.Fprint(stderr, ErrInvalidSubCmd.Error())
+		fmt.Fprintln(stderr)
+		printUsage(stdout, stderr)
 		err = ErrInvalidSubCmd
 	}
 
@@ -64,12 +64,12 @@ func runCmd(w io.Writer, args []string) error {
 
 }
 
-func printUsage(w io.Writer) {
-	fmt.Fprint(w, USAGE_STRING)
-	fmt.Fprintln(w)
-	fmt.Fprintln(w)
-	fmt.Fprint(w, "COMMANDS:")
-	fmt.Fprintln(w)
-	cmd.HandleAdd(w, []string{"-h"})
-	cmd.HandleQuote(w, []string{"-h"})
+func printUsage(stdout, stderr io.Writer) {
+	fmt.Fprint(stderr, USAGE_STRING)
+	fmt.Fprintln(stderr)
+	fmt.Fprintln(stderr)
+	fmt.Fprint(stderr, "COMMANDS:")
+	fmt.Fprintln(stderr)
+	cmd.HandleAdd(stdout, stderr, []string{"-h"})
+	cmd.HandleQuote(stderr, []string{"-h"})
 }

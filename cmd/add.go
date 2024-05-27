@@ -14,6 +14,7 @@ const (
 add: add a new quote with an optional genre
 			
 Usage: add [OPTIONS] <quote>` /* TODO: Write proper usage */
+	ADD_SUCCESS_MSG = "Quote added successfully!"
 )
 
 /* TODO: Do you want the quote to be a part of the config itself here? If not, might require a redesign */
@@ -22,8 +23,8 @@ type AddConfig struct {
 	quote string
 }
 
-func HandleAdd(w io.Writer, args []string) error {
-	config, err := parseAddArgs(w, args)
+func HandleAdd(stdout, stderr io.Writer, args []string) error {
+	config, err := parseAddArgs(stderr, args)
 	if err != nil {
 		/* Parse errors already printed to 'w' by fs.Parse command + additional errors handled inside parseAddArgs() */
 		return err
@@ -32,16 +33,18 @@ func HandleAdd(w io.Writer, args []string) error {
 	/* Read current quotes file, or create one if it doesn't exist */
 	f, err := os.OpenFile(PERSIST_FILENAME, os.O_RDWR|os.O_CREATE, 0777)
 	if err != nil {
-		HandleError(w, err)
+		HandleError(stderr, err)
 		return err
 	}
 	defer f.Close()
 
 	err = runAddCmd(f, config)
 	if err != nil {
-		HandleError(w, err)
+		HandleError(stderr, err)
 		return err
 	}
+	fmt.Fprint(stdout, ADD_SUCCESS_MSG)
+	fmt.Fprintln(stdout)
 
 	return nil
 }
