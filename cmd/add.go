@@ -86,21 +86,21 @@ func runAddCmd(quoteStorage io.ReadWriteSeeker, config AddConfig) error {
 	return nil
 }
 
-func parseAddArgs(w io.Writer, args []string) (AddConfig, error) {
+func parseAddArgs(stderr io.Writer, args []string) (AddConfig, error) {
 	var config AddConfig
 
 	/* Setup */
 	fs := flag.NewFlagSet("add", flag.ContinueOnError)
 	fs.StringVar(&config.genre, "g", "misc", "genre to which the quote belongs")
 
-	fs.SetOutput(w)
+	fs.SetOutput(stderr)
 	fs.Usage = func() {
-		fmt.Fprint(w, ADD_USAGE_STRING)
-		fmt.Fprintln(w)
-		fmt.Fprintln(w)
-		fmt.Fprint(w, "OPTIONS:")
-		fmt.Fprintln(w)
-		fmt.Fprintln(w)
+		fmt.Fprint(stderr, ADD_USAGE_STRING)
+		fmt.Fprintln(stderr)
+		fmt.Fprintln(stderr)
+		fmt.Fprint(stderr, "OPTIONS:")
+		fmt.Fprintln(stderr)
+		fmt.Fprintln(stderr)
 		fs.PrintDefaults()
 	}
 
@@ -112,8 +112,8 @@ func parseAddArgs(w io.Writer, args []string) (AddConfig, error) {
 
 	/* First positional arg treated as quote and others ignored */
 	if fs.NArg() == 0 {
-		fmt.Fprint(w, ErrNoPositionalArgs)
-		fmt.Fprintln(w)
+		fmt.Fprint(stderr, ErrNoPositionalArgs)
+		fmt.Fprintln(stderr)
 		fs.Usage()
 		return config, ErrNoPositionalArgs
 	}
