@@ -32,15 +32,16 @@ Sub-command flags:
 
 - ^ (Personal opinion) No need to be too dogmatic about this though, I feel a good way to think in general is: try to structure your code such that they naturally occur as easily testable units.
 
-    - For e.g. I had to pass a writer to functions _parseAddArgs_ and _parseQuoteArgs_, even though this is not strictly a functional style (side-effects to writer) because:
-        1. Wanted my parsing logic to be easily testable
-        2. The flags package _fs_ handles errors by directly writing to writer
-    Know what you are doing and why you're doing it
+    - For e.g. I had initially passed my writer to functions _parseAddArgs_ and _parseQuoteArgs_ (refer to git history), even though this is not a functional style (side-effects to writer):
+        0. fs.SetOutput(w) would set the error output of fs.Parse() directly to our passed writer 
+        1. My parsing logic was still fairly easily testable
+        2. However, I had to make adjustments to other functions (don't print/handle error in the _driver_ after calling _parseAddArgs_ because the printing is already handled in _parseAddArgs_)
+        3. This would mean further adjustments when unit-testing such cases
+    
+    - I had also tried to structure _add_ sub-command's core function in a non-functional manner (_addQuoteToStorage_ function, refer to git history). This resulted in convoluted tests and a weird mock structure + interface to test it out.
+    
+    - Going over my git history for the above functions will give a good idea of the change from certain non-functional to purely functional functions and how it simplified testing
 
-    - All sub-command functions apart from these two are purely functional which made testing quite simple
-
-
-- I had also tried to structure _add_ sub-command's core function in a non-functional manner (_addQuoteToStorage_ function, refer to git history). This resulted in convoluted tests and a weird mock structure + interface to test it out.
 
 - Thought: Do you need to test for actually running the command using os.Exec()? Since you are mocking stderr and stdout using interfaces + testing all functional components, I don't think there is much need to do this.
 
