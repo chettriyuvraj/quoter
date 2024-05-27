@@ -94,20 +94,20 @@ func runQuoteCmd(w io.Writer, quoteStorage io.ReadWriteSeeker, config QuoteConfi
 	return nil
 }
 
-func parseQuoteArgs(w io.Writer, args []string) (QuoteConfig, error) {
+func parseQuoteArgs(stderr io.Writer, args []string) (QuoteConfig, error) {
 	var config QuoteConfig
 
 	fs := flag.NewFlagSet("quote", flag.ContinueOnError)
 	fs.StringVar(&config.Genre, "g", "", "genre from which we want a quote")
 
-	fs.SetOutput(w)
+	fs.SetOutput(stderr)
 	fs.Usage = func() {
-		fmt.Fprint(w, QUOTE_USAGE_STRING)
-		fmt.Fprintln(w)
-		fmt.Fprintln(w)
-		fmt.Fprint(w, "OPTIONS:")
-		fmt.Fprintln(w)
-		fmt.Fprintln(w)
+		fmt.Fprint(stderr, QUOTE_USAGE_STRING)
+		fmt.Fprintln(stderr)
+		fmt.Fprintln(stderr)
+		fmt.Fprint(stderr, "OPTIONS:")
+		fmt.Fprintln(stderr)
+		fmt.Fprintln(stderr)
 		fs.PrintDefaults()
 	}
 

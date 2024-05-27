@@ -121,8 +121,8 @@ func TestParseAddArgs(t *testing.T) {
 	tcs := []struct {
 		desc       string
 		args       []string
-		wantErr    error
 		want       AddConfig
+		wantErr    error
 		wantStdout string
 		wantStderr string
 	}{

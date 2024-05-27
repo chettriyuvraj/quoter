@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bytes"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -13,34 +14,35 @@ import (
 func TestParseQuoteArgs(t *testing.T) {
 
 	tcs := []struct {
-		desc   string
-		args   []string
-		err    error
-		want   QuoteConfig
-		output string
+		desc       string
+		args       []string
+		want       QuoteConfig
+		wantErr    error
+		wantStdout string
+		wantStderr string
 	}{
 		{
-			desc:   "help flag",
-			args:   []string{"-h"},
-			err:    flag.ErrHelp,
-			output: QUOTE_USAGE_STRING,
+			desc:       "help flag",
+			args:       []string{"-h"},
+			wantErr:    flag.ErrHelp,
+			wantStderr: QUOTE_USAGE_STRING,
 		},
 		{
-			desc:   "non existent flag",
-			args:   []string{"-x"},
-			err:    flag.ErrHelp,
-			output: QUOTE_USAGE_STRING,
+			desc:       "non existent flag",
+			args:       []string{"-x"},
+			wantErr:    errors.New("flag provided but not defined: -x"),
+			wantStderr: QUOTE_USAGE_STRING,
+		},
+		{
+			desc:       "genre flag but no genre specifed",
+			args:       []string{"-g"},
+			wantErr:    errors.New("flag needs an argument: -g"),
+			wantStderr: QUOTE_USAGE_STRING,
 		},
 		{
 			desc: "genre flag only",
 			args: []string{"-g", "romance"},
 			want: QuoteConfig{Genre: "romance"},
-		},
-		{
-			desc:   "genre flag but no genre specifed",
-			args:   []string{"-g"},
-			err:    flag.ErrHelp,
-			output: QUOTE_USAGE_STRING,
 		},
 		{
 			desc: "no flags",
@@ -50,22 +52,32 @@ func TestParseQuoteArgs(t *testing.T) {
 	}
 
 	for _, tc := range tcs {
-		buf := bytes.Buffer{}
-		got, err := parseQuoteArgs(&buf, tc.args)
-		if tc.err != nil {
-			require.Error(t, tc.err, err, tc.desc)
+
+		/* Execute parse */
+		errBuf := bytes.Buffer{}
+		got, err := parseQuoteArgs(&errBuf, tc.args)
+
+		if tc.wantErr != nil {
+			/* Assert if error strings are the same - error not compared directly because internal errors are also returned which will not match with error.Is */
+			require.ErrorContains(t, err, tc.wantErr.Error(), tc.desc)
+
+			/* Formulate the error output we are expecting to receive: for 'errHelp' we are expecting usage string; for any other error we are expecting err + usageString  */
 			errWantBuf := bytes.Buffer{}
 			if err != flag.ErrHelp {
 				fmt.Fprint(&errWantBuf, err.Error())
 				fmt.Fprintln(&errWantBuf)
 			}
 			fmt.Fprintln(&errWantBuf, completeQuoteUsageString)
-			require.Equal(t, errWantBuf.String(), buf.String(), tc.desc)
+
+			/* Compare the error string we are expecting with the one we want */
+			require.Equal(t, errWantBuf.String(), errBuf.String(), tc.desc)
 			continue
 		}
+
+		/* Non-error case */
 		require.NoError(t, err, tc.desc)
 		require.Equal(t, tc.want, got, tc.desc)
-		require.Equal(t, tc.output, buf.String(), tc.desc)
+		require.Equal(t, tc.wantStderr, errBuf.String(), tc.desc) /* Standard output remains empty */
 
 	}
 }
