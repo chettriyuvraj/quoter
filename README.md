@@ -35,13 +35,13 @@ Use the -h flag for help with these
 
 - ^ (Personal opinion) No need to be too pedantic about about this though.
 
-I feel a better way to think about it in general is: try to structure your code such that they naturally occur as easily testable units. Once you suffer as a result of not having done that, it is very easy to see the reasons for doing it.
+    - I feel a better way to think about it in general is: try to structure your code such that they naturally occur as easily testable units. Once you suffer as a result of not having done that, it is very easy to see the reasons for doing it.
 
     - For e.g. I had initially passed my writer to functions _parseAddArgs_ and _parseQuoteArgs_ (refer to git history), even though this is not a functional style (side-effects to writer):
-        0. fs.SetOutput(w) would set the error output of fs.Parse() directly to our passed writer 
-        1. My parsing logic was still fairly easily testable
-        2. However, I had to make adjustments to other functions (don't print/handle error in the _driver_ after calling _parseAddArgs_ because the printing is already handled in _parseAddArgs_)
-        3. This would mean further adjustments when unit-testing such cases
+        -  fs.SetOutput(w) would set the error output of fs.Parse() directly to our passed writer 
+        - My parsing logic was still fairly easily testable
+        - However, I had to make adjustments to other functions (don't print/handle error in the _driver_ after calling _parseAddArgs_ because the printing is already handled in _parseAddArgs_)
+        - This would mean further adjustments when unit-testing such cases
     
     - I had also tried to structure _add_ sub-command's core function in a non-functional manner (_addQuoteToStorage_ function, refer to git history). This resulted in convoluted tests and a weird mock structure + interface to test it out.
     
