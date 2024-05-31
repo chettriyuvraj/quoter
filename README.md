@@ -33,7 +33,9 @@ Use the -h flag for help with these
 
 - Functions for each sub-command are mostly structured in an easily testable, functional style. This talk about [Functional Core, Imperative Shell](https://news.ycombinator.com/item?id=18043058) is a good way to think about it. Good comments in the HN comment section as well.
 
-- ^ (Personal opinion) No need to be too dogmatic about this though, I feel a good way to think in general is: try to structure your code such that they naturally occur as easily testable units.
+- ^ (Personal opinion) No need to be too pedantic about about this though.
+
+I feel a better way to think about it in general is: try to structure your code such that they naturally occur as easily testable units. Once you suffer as a result of not having done that, it is very easy to see the reasons for doing it.
 
     - For e.g. I had initially passed my writer to functions _parseAddArgs_ and _parseQuoteArgs_ (refer to git history), even though this is not a functional style (side-effects to writer):
         0. fs.SetOutput(w) would set the error output of fs.Parse() directly to our passed writer 
