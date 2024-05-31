@@ -17,8 +17,11 @@ Sub-commands:
     - quote: retrieve a random quote from our on-disk file
 
 Sub-command flags:
+    
     - g: to specify the genre of the quote being added/retreived
 
+
+Use the -h flag for help with these
 
 ## General structure
 
@@ -49,8 +52,5 @@ Sub-command flags:
 
 ## Nit
 
-- usage message for parent command will always name it as _quoter_ even if compiled binary is named differentky - might confuse user
-
-
-
+- usage message for parent command will always name it as _quoter_ even if compiled binary is named differently - might confuse user
 
