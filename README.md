@@ -47,6 +47,7 @@ Use the -h flag for help with these
     
     - Going over my git history for the above functions will give a good idea of the change from certain non-functional to purely functional functions and how it simplified testing
 
+    - I have read pieces about how Go is not a functional language and trying to shoehorn it into one will lead to hazard - I am unsure about what exactly this means since I have not used a pure functional language like Haskell (want to - soon)
 
 - Thought: Do you need to test for actually running the command using os.Exec()? Since you are mocking stderr and stdout using interfaces + testing all functional components, I don't think there is much need to do this.
 
